@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リフォーム工程並べ替えワーク - ソリティア形式</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d3748;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+        }
+
+        .header-sub {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .instructions {
+            background: #edf2f7;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            color: #4a5568;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .instructions span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .instructions strong {
+            color: #2d3748;
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+
+        /* Deck Area */
+        .deck-area {
+            flex: 0 0 320px;
+            background: #fafafa;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .deck-area.drag-over {
+            background: #edf2f7;
+            border-color: #5a67d8;
+            border-style: dashed;
+        }
+
+        @media (max-width: 768px) {
+            .deck-area {
+                flex: 1;
+            }
+        }
+
+        .deck-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .deck-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 300px;
+            flex: 1;
+        }
+
+        .deck-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 100px;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        /* Timeline Area */
+        .timeline-area {
+            flex: 1;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .timeline-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* Slot Styles */
+        .slot-wrapper {
+            margin-bottom: 4px;
+        }
+
+        .slot {
+            min-height: 70px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 12px;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .slot.drag-over {
+            background: #edf2f7;
+            border-color: #5a67d8;
+            border-style: solid;
+        }
+
+        .slot-number {
+            background: #cbd5e0;
+            color: #4a5568;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .slot-placeholder {
+            flex: 1;
+            color: #a0aec0;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .slot.filled {
+            border-style: solid;
+            border-color: #e2e8f0;
+            background: white;
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);
+            color: white;
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+            user-select: none;
+            font-size: 0.9rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.35);
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.dragging {
+            opacity: 0.3;
+        }
+
+        .card-handle {
+            opacity: 0.6;
+            font-size: 1rem;
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title {
+            font-weight: 500;
+        }
+
+        /* Gap Styles */
+        .gap-connector {
+            position: relative;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px 0;
+        }
+
+        .gap-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+            transform: translateX(-50%);
+        }
+
+        .gap-button {
+            position: relative;
+            z-index: 1;
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            color: #a0aec0;
+            padding: 4px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .gap-button:hover {
+            background: #edf2f7;
+            border-color: #5a67d8;
+            color: #5a67d8;
+            transform: scale(1.05);
+        }
+
+        /* Gap Input Mode */
+        .gap-input-wrapper {
+            position: relative;
+            z-index: 1;
+            background: #fffbeb;
+            border: 2px solid #f6ad55;
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .gap-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            outline: none;
+            color: #744210;
+        }
+
+        .gap-input::placeholder {
+            color: #c05621;
+            opacity: 0.7;
+        }
+
+        .gap-btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 2px;
+            line-height: 1;
+            transition: transform 0.15s;
+        }
+
+        .gap-btn-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .gap-btn-icon.confirm {
+            color: #38a169;
+        }
+
+        .gap-btn-icon.cancel {
+            color: #e53e3e;
+        }
+
+        /* Filled Gap */
+        .gap-filled {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            border: 2px solid #68d391;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(104, 211, 145, 0.2);
+        }
+
+        .gap-filled-icon {
+            background: #38a169;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .gap-filled-text {
+            flex: 1;
+            color: #22543d;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .gap-filled-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .gap-filled-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px;
+            opacity: 0.7;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+
+        .gap-filled-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .gap-filled-btn.edit {
+            color: #2f855a;
+        }
+
+        .gap-filled-btn.delete {
+            color: #c53030;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 12px 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .submit-button {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(56, 161, 105, 0.3);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 14px 18px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .modal-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .modal-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal-item-number {
+            background: #5a67d8;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .modal-item-gap .modal-item-number {
+            background: #38a169;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+        }
+
+        .modal-item-text {
+            color: #4a5568;
+        }
+
+        .modal-item-gap {
+            padding-left: 20px;
+        }
+
+        .modal-item-gap .modal-item-text {
+            color: #22543d;
+            font-style: italic;
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-button {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .modal-button-cancel {
+            background: #e2e8f0;
+            border: none;
+            color: #4a5568;
+        }
+
+        .modal-button-cancel:hover {
+            background: #cbd5e0;
+        }
+
+        .modal-button-confirm {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .modal-button-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(56, 161, 105, 0.3);
+        }
+
+        /* Success Modal */
+        .success-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .success-text {
+            text-align: center;
+            color: #2d3748;
+        }
+
+        .success-text h3 {
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+
+        .success-text p {
+            color: #718096;
+            font-size: 0.85rem;
+        }
+
+        .error-text {
+            color: #c53030;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>リフォーム工程並べ替えワーク</h1>
+            </div>
+            <div class="header-sub">〜手札から順番に配置してみよう〜</div>
+        </div>
+
+        <div class="instructions">
+            <span><strong>1.</strong> デッキからカードをドラッグしてタイムラインに配置</span>
+            <span><strong>2.</strong> Slot間の「＋」で工程を追加</span>
+            <span><strong>3.</strong> 完了したら「提出」</span>
+        </div>
+
+        <div class="main-content">
+            <!-- Deck Area -->
+            <div class="deck-area" id="deckArea">
+                <div class="deck-header">
+                    <span class="deck-header-icon">🎴</span>
+                    <span>デッキ（手札）</span>
+                </div>
+                <div class="deck-cards" id="deckCards">
+                    <!-- Deck cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Timeline Area -->
+            <div class="timeline-area">
+                <div class="timeline-header">
+                    <span class="timeline-header-icon">📋</span>
+                    <span>タイムライン（配置エリア）</span>
+                </div>
+                <div class="timeline-slots" id="timelineSlots">
+                    <!-- Timeline slots and gaps will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="submit-button" onclick="showConfirmModal()">提出する</button>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <div class="modal-header">提出内容の確認</div>
+            <div class="modal-body" id="confirmModalBody"></div>
+            <div class="modal-footer">
+                <button class="modal-button modal-button-cancel" onclick="closeConfirmModal()">戻る</button>
+                <button class="modal-button modal-button-confirm" onclick="submitResult()">提出する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal">
+            <div class="modal-body" style="padding: 30px 18px;">
+                <div class="success-icon">&#10003;</div>
+                <div class="success-text">
+                    <h3>提出完了</h3>
+                    <p>ありがとうございます。<br>結果が送信されました。</p>
+                </div>
+                <div id="errorMessage"></div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="modal-button modal-button-confirm" onclick="closeSuccessModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial card data (No number badges, just pure text)
+        const initialCards = [
+            { id: 1, title: '家族で相談する' },
+            { id: 2, title: 'メーカー・モデルルーム見学' },
+            { id: 3, title: 'プラン・見積もり提案をもらう' },
+            { id: 4, title: '契約する' },
+            { id: 5, title: '業者との詳細打ち合わせ' },
+            { id: 6, title: '完成立ち合い・チェック' },
+            { id: 7, title: '引き渡し・引っ越し' }
+        ];
+
+        // Shuffle function (Fisher-Yates)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // State
+        let deck = shuffleArray(initialCards.map(c => ({ ...c })));
+        let timeline = Array(7).fill(null); // 7 slots
+        let gaps = {}; // { slotIndex: text }
+        let editingGapIndex = null;
+        let draggedCard = null;
+        let dragSourceType = null; // 'deck' or 'slot'
+        let dragSourceIndex = null; // index in deck OR slot index
+
+        // Render functions
+        function render() {
+            renderDeck();
+            renderTimeline();
+        }
+
+        function renderDeck() {
+            const container = document.getElementById('deckCards');
+
+            if (deck.length === 0) {
+                container.innerHTML = '<div class="deck-empty">すべてのカードが配置されました</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            deck.forEach((card, index) => {
+                const cardEl = createCardElement(card, 'deck', index);
+                container.appendChild(cardEl);
+            });
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineSlots');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                // Slot
+                const slotEl = createSlotElement(i);
+                container.appendChild(slotEl);
+
+                // Gap (6 gaps total)
+                if (i < 6) {
+                    const gapEl = createGapElement(i);
+                    container.appendChild(gapEl);
+                }
+            }
+        }
+
+        function createCardElement(card, sourceType, sourceIndex) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.draggable = true;
+            div.dataset.sourceType = sourceType;
+            div.dataset.sourceIndex = sourceIndex;
+
+            div.innerHTML = `
+                <div class="card-content">
+                    <span class="card-handle">&#9776;</span>
+                    <span class="card-title">${escapeHtml(card.title)}</span>
+                </div>
+            `;
+
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragend', handleDragEnd);
+
+            return div;
+        }
+
+        function createSlotElement(slotIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slot-wrapper';
+
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.dataset.slotIndex = slotIndex;
+
+            // Allow dropping onto slot
+            slot.addEventListener('dragover', handleSlotDragOver);
+            slot.addEventListener('dragleave', handleSlotDragLeave);
+            slot.addEventListener('drop', handleSlotDrop);
+
+            const card = timeline[slotIndex];
+
+            if (card) {
+                slot.classList.add('filled');
+                // Card in slot
+                const cardEl = createCardElement(card, 'slot', slotIndex);
+                slot.appendChild(cardEl);
+            } else {
+                // Empty slot placeholder
+                const numberEl = document.createElement('div');
+                numberEl.className = 'slot-number';
+                numberEl.textContent = slotIndex + 1;
+
+                const placeholderEl = document.createElement('div');
+                placeholderEl.className = 'slot-placeholder';
+                placeholderEl.textContent = `Slot ${slotIndex + 1} - ここにカードをドロップ`;
+
+                slot.appendChild(numberEl);
+                slot.appendChild(placeholderEl);
+            }
+
+            wrapper.appendChild(slot);
+            return wrapper;
+        }
+
+        function createGapElement(slotIndex) {
+            const div = document.createElement('div');
+            div.className = 'gap-connector';
+
+            // Background line
+            const line = document.createElement('div');
+            line.className = 'gap-line';
+            div.appendChild(line);
+
+            const gapText = gaps[slotIndex];
+
+            if (editingGapIndex === slotIndex) {
+                // Input mode
+                const wrapper = document.createElement('div');
+                wrapper.className = 'gap-input-wrapper';
+
+                wrapper.innerHTML = `
+                    <input type="text" class="gap-input" id="gapInput${slotIndex}" 
+                           placeholder="追加する工程を入力..." value="${escapeHtml(gapText || '')}">
+                    <button class="gap-btn-icon confirm" onclick="saveGap(${slotIndex})">✓</button>
+                    <button class="gap-btn-icon cancel" onclick="cancelGap(${slotIndex})">✕</button>
+                `;
+                div.appendChild(wrapper);
+
+                // Auto focus
+                setTimeout(() => {
+                    const input = document.getElementById(`gapInput${slotIndex}`);
+                    if (input) {
+                        input.focus();
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') saveGap(slotIndex);
+                        });
+                    }
+                }, 0);
+
+            } else if (gapText) {
+                // Filled mode
+                const filled = document.createElement('div');
+                filled.className = 'gap-filled';
+                filled.innerHTML = `
+                    <span class="gap-filled-icon">+</span>
+                    <span class="gap-filled-text">${escapeHtml(gapText)}</span>
+                    <div class="gap-filled-actions">
+                        <button class="gap-filled-btn edit" onclick="editGap(${slotIndex})">✎</button>
+                        <button class="gap-filled-btn delete" onclick="deleteGap(${slotIndex})">🗑</button>
+                    </div>
+                `;
+                div.appendChild(filled);
+
+            } else {
+                // Add button mode
+                const btn = document.createElement('button');
+                btn.className = 'gap-button';
+                btn.onclick = () => editGap(slotIndex);
+                btn.innerHTML = `<span class="plus-icon">+</span> ここに工程を追加`;
+                div.appendChild(btn);
+            }
+
+            return div;
+        }
+
+        /* --- Drag & Drop Logic --- */
+
+        // Initialize Deck drop zone
+        const deckArea = document.getElementById('deckArea');
+        deckArea.addEventListener('dragover', handleDeckDragOver);
+        deckArea.addEventListener('dragleave', handleDeckDragLeave);
+        deckArea.addEventListener('drop', handleDeckDrop);
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+
+            dragSourceType = this.dataset.sourceType;
+            dragSourceIndex = parseInt(this.dataset.sourceIndex);
+
+            e.dataTransfer.effectAllowed = 'move';
+            // Set dummy data for Firefox
+            e.dataTransfer.setData('text/plain', '');
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedCard = null;
+            dragSourceType = null;
+            dragSourceIndex = null;
+
+            // Clean up styles
+            document.querySelectorAll('.slot').forEach(el => el.classList.remove('drag-over'));
+            document.getElementById('deckArea').classList.remove('drag-over');
+        }
+
+        // -- Check Deck Drop --
+        function handleDeckDragOver(e) {
+            e.preventDefault();
+            // Only allow if dragging from slot
+            if (dragSourceType === 'slot') {
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            } else {
+                e.dataTransfer.dropEffect = 'none';
+            }
+        }
+
+        function handleDeckDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDeckDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (dragSourceType === 'slot') {
+                // Return card to deck
+                const card = timeline[dragSourceIndex];
+                timeline[dragSourceIndex] = null;
+                deck.push(card);
+                render();
+            }
+        }
+
+        // -- Check Slot Drop --
+        function handleSlotDragOver(e) {
+            e.preventDefault();
+
+            // Check if slot is empty (or we can swap?)
+            // For simplicity:
+            // 1. Deck -> Empty Slot: OK
+            // 2. Slot A -> Empty Slot B: OK
+            // 3. Swap is tricky but we can support Deck->Filled Slot (swap back to deck) logic if needed.
+            // Let's implement simple Rule: Target must be empty OR we implement swap.
+            // Implementation: Simple Swap logic.
+
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleSlotDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleSlotDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (!draggedCard) return;
+
+            const targetSlotIndex = parseInt(this.dataset.slotIndex);
+
+            // Logic depending on source
+            if (dragSourceType === 'deck') {
+                // Deck -> Slot
+                const card = deck[dragSourceIndex];
+                const existingCardInSlot = timeline[targetSlotIndex];
+
+                if (existingCardInSlot) {
+                    // Swap: Put existing card back to deck, put new card in slot
+                    deck[dragSourceIndex] = existingCardInSlot;
+                    timeline[targetSlotIndex] = card;
+                } else {
+                    // Move: Remove from deck, put in slot
+                    deck.splice(dragSourceIndex, 1);
+                    timeline[targetSlotIndex] = card;
+                }
+            } else if (dragSourceType === 'slot') {
+                // Slot -> Slot
+                if (dragSourceIndex === targetSlotIndex) return; // Same slot
+
+                const sourceCard = timeline[dragSourceIndex];
+                const targetCard = timeline[targetSlotIndex];
+
+                // Swap
+                timeline[targetSlotIndex] = sourceCard;
+                timeline[dragSourceIndex] = targetCard; // might be null
+            }
+
+            render();
+        }
+
+        /* --- Gap Logic --- */
+        function editGap(slotIndex) {
+            editingGapIndex = slotIndex;
+            render();
+        }
+
+        function saveGap(slotIndex) {
+            const input = document.getElementById(`gapInput${slotIndex}`);
+            const text = input.value.trim();
+            if (text) {
+                gaps[slotIndex] = text;
+            } else {
+                delete gaps[slotIndex];
+            }
+            editingGapIndex = null;
+            render();
+        }
+
+        function cancelGap(slotIndex) {
+            editingGapIndex = null;
+            render();
+        }
+
+        function deleteGap(slotIndex) {
+            delete gaps[slotIndex];
+            render();
+        }
+
+
+        /* --- Submission --- */
+        function showConfirmModal() {
+            const body = document.getElementById('confirmModalBody');
+            let html = '';
+
+            for (let i = 0; i < 7; i++) {
+                const card = timeline[i];
+                const gapText = gaps[i];
+
+                // Item (Card or Empty)
+                html += `<div class="modal-item">`;
+                html += `<span class="modal-item-number">${i + 1}</span>`;
+                if (card) {
+                    html += `<span class="modal-item-text">${escapeHtml(card.title)}</span>`;
+                } else {
+                    html += `<span class="modal-item-text" style="color:#a0aec0;">(未配置)</span>`;
+                }
+                html += `</div>`;
+
+                // Gap
+                if (i < 6 && gapText) {
+                    html += `<div class="modal-item modal-item-gap">`;
+                    html += `<span class="modal-item-number">+</span>`;
+                    html += `<span class="modal-item-text">${escapeHtml(gapText)}</span>`;
+                    html += `</div>`;
+                }
+            }
+
+            body.innerHTML = html;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        function submitResult() {
+            // Check if all slots filled? (Optional, maybe allow partial?)
+            // Let's allow partial for now but maybe warn? No, just submit.
+
+            const payload = {
+                timestamp: new Date().toISOString(),
+                timeline: timeline.map(c => c ? c.id : null),
+                gaps: gaps
+            };
+
+            console.log('Submitting:', payload);
+
+            // Mock API call
+            // fetch('https://api.gptech-intern.com/submit', { ... })
+
+            closeConfirmModal();
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        /* --- Utility --- */
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Start
+        render();
+
+    </script>
+</body>
+
+</html>
