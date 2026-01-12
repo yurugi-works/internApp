@@ -1063,11 +1063,33 @@
 
             console.log('Submitting:', payload);
 
-            // Mock API call
-            // fetch('https://api.gptech-intern.com/submit', { ... })
+            // API call to Google Apps Script
+            fetch('https://script.google.com/macros/s/AKfycby6EIXKpQL_R_nz0EAIyO6nKkiS3NryGbKEqbp3RiXrKa3vmu7y4bBdaP9LLkpTso8uZA/exec', {
+                method: 'POST',
+                mode: 'no-cors', // Important for GAS Web App
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                // With no-cors, we can't check response.ok or JSON content
+                // So we just assume success if no network error
+                console.log('Request sent successfully');
+                closeConfirmModal();
+                document.getElementById('successModal').classList.add('active');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('errorMessage').textContent = "送信に失敗しました: " + error;
+                // Still show success modal for demo purposes? No, show error.
+                // But for intern demo, maybe better to show success?
+                // For now, let's just log error.
+            });
 
-            closeConfirmModal();
-            document.getElementById('successModal').classList.add('active');
+            // Fallback for demo (if network fails or blocking)
+            // closeConfirmModal();
+            // document.getElementById('successModal').classList.add('active');
         }
 
         function closeSuccessModal() {
