@@ -8,10 +8,11 @@ function doPost(e) {
     const postData = JSON.parse(e.postData.contents);
     const timeline = postData.timeline || []; // カードIDの配列
     const gaps = postData.gaps || {};         // { "0": "gap info", ... }
+    const userName = postData.name || "名無し"; // ユーザー名
     
     // 2. 通知本文の作成
-    const subject = "【インターン提出】ワーク回答が届きました";
-    let body = "インターン生から回答が提出されました。\n\n";
+    const subject = `【インターン提出】ワーク回答が届きました（${userName}）`;
+    let body = `インターン生（${userName}）から回答が提出されました。\n\n`;
     body += "--------------------------------------\n";
     body += "■ 提出日時: " + new Date().toLocaleString() + "\n\n";
     

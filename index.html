@@ -1050,6 +1050,18 @@
             }
 
             body.innerHTML = html;
+
+            // Add Name Input to Modal
+            const nameInputHtml = `
+                <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #edf2f7;">
+                    <label style="display:block; margin-bottom: 5px; font-weight:bold; color:#2d3748;">お名前</label>
+                    <input type="text" id="submitterName" placeholder="氏名を入力してください" 
+                        style="width: 100%; padding: 8px; border: 2px solid #cbd5e0; border-radius: 6px; font-size: 1rem;">
+                    <div id="nameError" style="color: #e53e3e; font-size: 0.8rem; margin-top: 4px; display: none;">名前を入力してください</div>
+                </div>
+            `;
+            body.insertAdjacentHTML('beforeend', nameInputHtml);
+
             document.getElementById('confirmModal').classList.add('active');
         }
 
@@ -1061,10 +1073,23 @@
             // Check if all slots filled? (Optional, maybe allow partial?)
             // Let's allow partial for now but maybe warn? No, just submit.
 
+            const nameInput = document.getElementById('submitterName');
+            const name = nameInput ? nameInput.value.trim() : '';
+
+            if (!name) {
+                const errorEl = document.getElementById('nameError');
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    nameInput.style.borderColor = '#e53e3e';
+                }
+                return; // Stop submission
+            }
+
             const payload = {
                 timestamp: new Date().toISOString(),
                 timeline: timeline.map(c => c ? c.id : null),
-                gaps: gaps
+                gaps: gaps,
+                name: name
             };
 
             console.log('Submitting:', payload);
