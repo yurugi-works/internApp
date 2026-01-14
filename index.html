@@ -681,6 +681,12 @@
     </div>
 
     <script>
+        // =================================================================
+        // 【設定エリア】
+        // ここに発行されたWebアプリのURLを貼り付けてください
+        const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbyRzd4GyZPUdgLOh5cL2zc5zjmiZDMXNmPCXx9kWqfJFBD1FRvYhda3cvEsKICLZLNjNw/exec";
+        // =================================================================
+
         // Initial card data (No number badges, just pure text)
         const initialCards = [
             { id: 1, title: '家族で相談する' },
@@ -1064,7 +1070,7 @@
             console.log('Submitting:', payload);
 
             // API call to Google Apps Script
-            fetch('https://script.google.com/macros/s/AKfycby6EIXKpQL_R_nz0EAIyO6nKkiS3NryGbKEqbp3RiXrKa3vmu7y4bBdaP9LLkpTso8uZA/exec', {
+            fetch(DEPLOY_URL, {
                 method: 'POST',
                 mode: 'no-cors', // Important for GAS Web App
                 headers: {
@@ -1072,20 +1078,20 @@
                 },
                 body: JSON.stringify(payload)
             })
-            .then(response => {
-                // With no-cors, we can't check response.ok or JSON content
-                // So we just assume success if no network error
-                console.log('Request sent successfully');
-                closeConfirmModal();
-                document.getElementById('successModal').classList.add('active');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('errorMessage').textContent = "送信に失敗しました: " + error;
-                // Still show success modal for demo purposes? No, show error.
-                // But for intern demo, maybe better to show success?
-                // For now, let's just log error.
-            });
+                .then(response => {
+                    // With no-cors, we can't check response.ok or JSON content
+                    // So we just assume success if no network error
+                    console.log('Request sent successfully');
+                    closeConfirmModal();
+                    document.getElementById('successModal').classList.add('active');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('errorMessage').textContent = "送信に失敗しました: " + error;
+                    // Still show success modal for demo purposes? No, show error.
+                    // But for intern demo, maybe better to show success?
+                    // For now, let's just log error.
+                });
 
             // Fallback for demo (if network fails or blocking)
             // closeConfirmModal();

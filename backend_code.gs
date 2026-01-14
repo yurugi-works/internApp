@@ -41,9 +41,9 @@ function doPost(e) {
     
     // 3. 通信先への送信
     
-    // パターンA: 実行者（あなた）のメールアドレスに送る場合
-    // 実行者のメールアドレスを取得
-    const recipient = Session.getActiveUser().getEmail(); 
+    // パターンA: 実行者（あなた＝スクリプトのオーナー）のメールアドレスに送る場合
+    // 実行者のメールアドレスを取得（getEffectiveUserはスクリプトの所有者を指します）
+    const recipient = Session.getEffectiveUser().getEmail(); 
     if (recipient) {
        GmailApp.sendEmail(recipient, subject, body);
     } else {
